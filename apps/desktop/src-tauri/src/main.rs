@@ -81,6 +81,7 @@ fn main() {
             let handle = app.handle().clone();
             thread::spawn(move || {
                 let ready = wait_for_core(port, Duration::from_secs(45));
+                let window_handle = handle.clone();
                 let _ = handle.run_on_main_thread(move || {
                     let url = format!("http://127.0.0.1:{port}");
                     let target = if ready {
@@ -91,7 +92,7 @@ fn main() {
                     } else {
                         WebviewUrl::App("index.html".into())
                     };
-                    let builder = WebviewWindowBuilder::new(&handle, "main", target)
+                    let builder = WebviewWindowBuilder::new(&window_handle, "main", target)
                         .title("Bellows · 风箱")
                         .inner_size(1280.0, 800.0)
                         .min_inner_size(960.0, 640.0)
