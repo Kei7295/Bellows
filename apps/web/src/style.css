@@ -1,0 +1,381 @@
+@import "tailwindcss";
+@import "fuxsto-design/styles";
+
+/* Bellows brand layer: additive tokens only, never overriding Fuxsto values. */
+:root {
+  --app-titlebar: color-mix(in oklab, var(--background) 92%, var(--foreground));
+  --app-sidebar: var(--secondary);
+  --app-overlay: 0 20px 60px rgb(0 0 0 / 0.35);
+  --app-focus-ring: 0 0 0 6px color-mix(in oklab, var(--ring) 12%, transparent);
+  --app-grid-line: color-mix(in oklab, var(--border) 70%, transparent);
+  --app-hover: color-mix(in oklab, var(--foreground) 4%, transparent);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    "PingFang SC", "Microsoft YaHei", "Noto Sans SC", Arial, sans-serif;
+  --font-mono: SFMono-Regular, "Cascadia Code", "JetBrains Mono", Consolas, Menlo,
+    "PingFang SC", monospace;
+}
+
+@theme {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+html {
+  background: var(--background);
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--foreground) 18%, transparent);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--foreground) 16%, transparent);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--foreground) 30%, transparent);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--app-focus-ring);
+  border-radius: 4px;
+}
+
+.app-drag-region {
+  -webkit-app-region: drag;
+}
+.app-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.metric-number {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.hairline {
+  border-color: var(--border);
+}
+
+.panel {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.panel-muted {
+  background: color-mix(in oklab, var(--secondary) 60%, var(--background));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.pressable {
+  transition:
+    background-color var(--duration-fast) cubic-bezier(0.4, 0, 0.2, 1),
+    color var(--duration-fast) cubic-bezier(0.4, 0, 0.2, 1),
+    border-color var(--duration-fast) cubic-bezier(0.4, 0, 0.2, 1),
+    transform var(--duration-fast) cubic-bezier(0.4, 0, 0.2, 1);
+}
+.pressable:active {
+  transform: translateY(1px);
+}
+
+/* Page entrance: 8px rise + fade, 400ms. */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-enter {
+  animation: page-enter 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise-in {
+  animation: rise-in 250ms cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+@keyframes sweep {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.stream-sweep {
+  background-image: linear-gradient(
+    100deg,
+    var(--muted-foreground) 20%,
+    var(--foreground) 45%,
+    var(--muted-foreground) 70%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sweep 1.5s linear infinite;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.86);
+  }
+}
+.live-dot {
+  animation: live-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes blink-caret {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+.caret {
+  animation: blink-caret 1s steps(1) infinite;
+}
+
+/* Chart primitives (no canvas, token driven). */
+.chart-bar {
+  background: color-mix(in oklab, var(--foreground) 78%, transparent);
+  border-radius: 2px 2px 0 0;
+  transition: height 400ms cubic-bezier(0.16, 1, 0.3, 1), background-color 150ms;
+  min-height: 3px;
+}
+.chart-bar:hover {
+  background: var(--foreground);
+}
+.chart-bar-muted {
+  background: color-mix(in oklab, var(--foreground) 16%, transparent);
+}
+
+.message-row-in {
+  animation: rise-in 250ms cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+.code-block {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--secondary-foreground);
+}
+
+.sidebar-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: calc(var(--radius) - 2px);
+  color: var(--muted-foreground);
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    background-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sidebar-link:hover {
+  background: var(--app-hover);
+  color: var(--foreground);
+}
+.sidebar-link.active {
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.sidebar-link.active::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 9px;
+  bottom: 9px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--foreground);
+}
+
+.nav-section-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  padding: 0 10px;
+  margin: 18px 0 8px;
+}
+
+.status-capsule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: var(--background);
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.window-btn {
+  width: 34px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  color: var(--muted-foreground);
+  transition: background-color 150ms, color 150ms;
+}
+.window-btn:hover {
+  background: var(--app-hover);
+  color: var(--foreground);
+}
+.window-btn.close:hover {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--secondary);
+  color: var(--muted-foreground);
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.search-box:focus-within {
+  border-color: var(--ring);
+  box-shadow: var(--app-focus-ring);
+  background: var(--background);
+}
+.search-box input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--foreground);
+  width: 100%;
+  font-size: 13px;
+}
+
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  padding: 4px 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted-foreground);
+  background: var(--background);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .rise-in,
+  .message-row-in {
+    animation: none !important;
+  }
+  .live-dot,
+  .stream-sweep,
+  .caret {
+    animation: none !important;
+  }
+}
