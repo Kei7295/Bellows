@@ -31,7 +31,13 @@ INBOUND = [
     "让我看看最近七天的消息趋势。",
 ]
 
-SENDERS = [("阿岚", "200301"), ("木木", "200302"), ("云雀", "300111"), ("Kaze", "400111"), ("泡芙", "500111")]
+SENDERS = [
+    ("阿岚", "200301"),
+    ("木木", "200302"),
+    ("云雀", "300111"),
+    ("Kaze", "400111"),
+    ("泡芙", "500111"),
+]
 
 
 class DemoEngine:
@@ -83,24 +89,53 @@ class DemoEngine:
         stream = rnd.choice(streams)
         sender_name, sender_id = rnd.choice(SENDERS)
         text = rnd.choice(INBOUND)
-        message = store_message(self.db, stream["id"], stream["instance_id"], None,
-                                "in", sender_id, sender_name, [{"type": "text", "text": text}],
-                                text, False, None)
-        self.db.execute("UPDATE streams SET last_message_at=?, unread=unread+1 WHERE id=?",
-                        (now_iso(), stream["id"]))
+        message = store_message(
+            self.db,
+            stream["id"],
+            stream["instance_id"],
+            None,
+            "in",
+            sender_id,
+            sender_name,
+            [{"type": "text", "text": text}],
+            text,
+            False,
+            None,
+        )
+        self.db.execute(
+            "UPDATE streams SET last_message_at=?, unread=unread+1 WHERE id=?",
+            (now_iso(), stream["id"]),
+        )
         self.db.execute(
             "INSERT INTO stats_daily (date, messages, replies, tokens) VALUES (date('now'), 1, 0, 0) "
             "ON CONFLICT(date) DO UPDATE SET messages=messages+1"
         )
         self.bus.publish("message.created", message)
-        self.bus.publish("stream.updated", {"id": stream["id"], "last_message_at": message["created_at"]})
+        self.bus.publish(
+            "stream.updated",
+            {"id": stream["id"], "last_message_at": message["created_at"]},
+        )
 
         if "风箱" in text or text.endswith("吗？") or text.endswith("？"):
             await asyncio.sleep(1.0)
             reply = generate(text)
-            out = store_message(self.db, stream["id"], stream["instance_id"], None,
-                                "out", "10001", "风箱", [{"type": "text", "text": reply}], reply, True, None)
-            self.db.execute("UPDATE streams SET last_message_at=? WHERE id=?", (now_iso(), stream["id"]))
+            out = store_message(
+                self.db,
+                stream["id"],
+                stream["instance_id"],
+                None,
+                "out",
+                "10001",
+                "风箱",
+                [{"type": "text", "text": reply}],
+                reply,
+                True,
+                None,
+            )
+            self.db.execute(
+                "UPDATE streams SET last_message_at=? WHERE id=?",
+                (now_iso(), stream["id"]),
+            )
             self.db.execute("UPDATE stats_daily SET replies=replies+1 WHERE date=date('now')")
             self.bus.publish("message.created", out)
 
@@ -108,12 +143,22 @@ class DemoEngine:
         rows = self._demo_instances()
         for inst in rows:
             latency = random.randint(14, 42)
-            self.db.execute("UPDATE instances SET latency_ms=?, updated_at=? WHERE id=?",
-                            (latency, now_iso(), inst["id"]))
-            self.bus.publish("instance.status", {"id": inst["id"], "status": "online", "latency_ms": latency})
+            self.db.execute(
+                "UPDATE instances SET latency_ms=?, updated_at=? WHERE id=?",
+                (latency, now_iso(), inst["id"]),
+            )
+            self.bus.publish(
+                "instance.status",
+                {"id": inst["id"], "status": "online", "latency_ms": latency},
+            )
         overview = self.db.one(
             "SELECT COALESCE(SUM(messages),0) AS messages, COALESCE(SUM(replies),0) AS replies "
             "FROM stats_daily WHERE date=date('now')"
         )
-        self.bus.publish("stats.tick", {"messages": overview["messages"] if overview else 0,
-                                        "replies": overview["replies"] if overview else 0})
+        self.bus.publish(
+            "stats.tick",
+            {
+                "messages": overview["messages"] if overview else 0,
+                "replies": overview["replies"] if overview else 0,
+            },
+        )

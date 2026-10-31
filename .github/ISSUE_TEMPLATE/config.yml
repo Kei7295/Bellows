@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 使用问题与问答
+    url: https://github.com/Kei7295/Bellows/blob/main/docs/FAQ.md
+    about: 先查阅 FAQ；仍未解决时再开缺陷报告。
+  - name: 安全漏洞（私密报告）
+    url: https://github.com/Kei7295/Bellows/security/advisories/new
+    about: 请勿公开披露，按 SECURITY.md 私下报告。
+  - name: 贡献指南
+    url: https://github.com/Kei7295/Bellows/blob/main/CONTRIBUTING.md
+    about: 提交代码前请阅读开发环境、检查命令与分支约定。

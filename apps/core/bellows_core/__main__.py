@@ -41,8 +41,13 @@ def main() -> None:
     port = _free_port() if args.port == 0 else args.port
     data_dir = Path(args.data_dir).resolve()
     app, _rt = create_app(data_dir, token=args.token)
-    handshake = {"port": port, "token": args.token, "pid": os.getpid(),
-                 "version": __version__, "data_dir": str(data_dir)}
+    handshake = {
+        "port": port,
+        "token": args.token,
+        "pid": os.getpid(),
+        "version": __version__,
+        "data_dir": str(data_dir),
+    }
     print("BELLOWS-CORE " + json.dumps(handshake, ensure_ascii=False), flush=True)
     print(f"Bellows core listening on http://{args.host}:{port}", flush=True)
     uvicorn.run(app, host=args.host, port=port, log_level=args.log_level)

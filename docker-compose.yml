@@ -1,0 +1,25 @@
+services:
+  bellows:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bellows:${BELLOWS_IMAGE_TAG:-0.0.1-beta}
+    container_name: bellows
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${BELLOWS_PORT:-7801}:7801"
+    environment:
+      BELLOWS_TOKEN: ${BELLOWS_TOKEN:-}
+      BELLOWS_LOG_LEVEL: ${BELLOWS_LOG_LEVEL:-info}
+    volumes:
+      - ./data:/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:7801/api/health', timeout=3).status == 200 else 1)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

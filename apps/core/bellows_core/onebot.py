@@ -36,12 +36,33 @@ class OneBotManager:
             "UPDATE instances SET status='online', latency_ms=18, updated_at=? WHERE id=?",
             (now_iso(), instance_id),
         )
-        await ws.send_text(json.dumps({
-            "action": "get_login_info", "params": {}, "echo": f"hello_{uuid.uuid4().hex[:6]}",
-        }, ensure_ascii=False))
-        self.bus.publish("instance.status", {"id": instance_id, "status": "online", "latency_ms": 18})
-        self.db.log("info", "onebot", f"协议端已连接实例 {instance_id}", {"instance": instance_id})
-        self.bus.publish("log.appended", {"level": "info", "source": "onebot", "message": f"协议端已连接实例 {instance_id}"})
+        await ws.send_text(
+            json.dumps(
+                {
+                    "action": "get_login_info",
+                    "params": {},
+                    "echo": f"hello_{uuid.uuid4().hex[:6]}",
+                },
+                ensure_ascii=False,
+            )
+        )
+        self.bus.publish(
+            "instance.status", {"id": instance_id, "status": "online", "latency_ms": 18}
+        )
+        self.db.log(
+            "info",
+            "onebot",
+            f"协议端已连接实例 {instance_id}",
+            {"instance": instance_id},
+        )
+        self.bus.publish(
+            "log.appended",
+            {
+                "level": "info",
+                "source": "onebot",
+                "message": f"协议端已连接实例 {instance_id}",
+            },
+        )
 
     def drop(self, instance_id: str) -> None:
         self.sockets.pop(instance_id, None)
@@ -60,8 +81,16 @@ class OneBotManager:
         if ws is None:
             return False
         try:
-            await ws.send_text(json.dumps({"action": action, "params": params,
-                                           "echo": f"act_{uuid.uuid4().hex[:8]}"}, ensure_ascii=False))
+            await ws.send_text(
+                json.dumps(
+                    {
+                        "action": action,
+                        "params": params,
+                        "echo": f"act_{uuid.uuid4().hex[:8]}",
+                    },
+                    ensure_ascii=False,
+                )
+            )
             return True
         except Exception:
             self.sockets.pop(instance_id, None)
@@ -73,12 +102,17 @@ class OneBotManager:
         if post_type == "meta_event":
             self_id = str(raw.get("self_id", ""))
             if self_id:
-                self.db.execute("UPDATE instances SET self_id=?, updated_at=? WHERE id=?",
-                                (self_id, now_iso(), instance_id))
+                self.db.execute(
+                    "UPDATE instances SET self_id=?, updated_at=? WHERE id=?",
+                    (self_id, now_iso(), instance_id),
+                )
                 self.db.execute(
                     "INSERT INTO settings (key,value_json) VALUES (?,?) "
                     "ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json",
-                    (f"account:{instance_id}", json.dumps({"uin": self_id}, ensure_ascii=False)),
+                    (
+                        f"account:{instance_id}",
+                        json.dumps({"uin": self_id}, ensure_ascii=False),
+                    ),
                 )
             return
         if post_type != "message":
@@ -100,19 +134,41 @@ class OneBotManager:
         )
         if stream:
             stream_id = stream["id"]
-            self.db.execute("UPDATE streams SET last_message_at=?, unread=unread+1 WHERE id=?",
-                            (now_iso(), stream_id))
+            self.db.execute(
+                "UPDATE streams SET last_message_at=?, unread=unread+1 WHERE id=?",
+                (now_iso(), stream_id),
+            )
         else:
             stream_id = new_id("st")
             title = sender_name if scene == "private" else f"群 {peer_id}"
-            self.db.insert("streams", {
-                "id": stream_id, "instance_id": instance_id, "scene": scene, "peer_id": peer_id,
-                "group_id": group_id, "title": title, "subtitle": "来自协议端的新会话",
-                "last_message_at": now_iso(), "unread": 1,
-            })
+            self.db.insert(
+                "streams",
+                {
+                    "id": stream_id,
+                    "instance_id": instance_id,
+                    "scene": scene,
+                    "peer_id": peer_id,
+                    "group_id": group_id,
+                    "title": title,
+                    "subtitle": "来自协议端的新会话",
+                    "last_message_at": now_iso(),
+                    "unread": 1,
+                },
+            )
 
-        message = store_message(self.db, stream_id, instance_id, raw.get("message_id"),
-                                "in", sender_id, sender_name, segments, text, False, raw)
+        message = store_message(
+            self.db,
+            stream_id,
+            instance_id,
+            raw.get("message_id"),
+            "in",
+            sender_id,
+            sender_name,
+            segments,
+            text,
+            False,
+            raw,
+        )
         self.bus.publish("message.created", message)
         self.db.execute(
             "INSERT INTO stats_daily (date, messages, replies, tokens) VALUES (date('now'), 1, 0, 0) "
@@ -123,16 +179,35 @@ class OneBotManager:
         if scene == "private" or mentioned or "风箱" in text:
             await asyncio.sleep(0.4)
             reply = generate(text)
-            out_message = store_message(self.db, stream_id, instance_id, None, "out", self_id,
-                                        "风箱", [{"type": "text", "text": reply}], reply, True, None)
+            out_message = store_message(
+                self.db,
+                stream_id,
+                instance_id,
+                None,
+                "out",
+                self_id,
+                "风箱",
+                [{"type": "text", "text": reply}],
+                reply,
+                True,
+                None,
+            )
             self.bus.publish("message.created", out_message)
             self.db.execute("UPDATE stats_daily SET replies=replies+1 WHERE date=date('now')")
-            self.db.execute("UPDATE streams SET last_message_at=? WHERE id=?", (now_iso(), stream_id))
-            await self.send_action(instance_id, "send_msg", {
-                "message_type": scene, "user_id": int(sender_id) if sender_id.isdigit() else sender_id,
-                "group_id": int(peer_id) if scene == "group" and peer_id.isdigit() else None,
-                "message": [{"type": "text", "data": {"text": reply}}],
-            })
+            self.db.execute(
+                "UPDATE streams SET last_message_at=? WHERE id=?",
+                (now_iso(), stream_id),
+            )
+            await self.send_action(
+                instance_id,
+                "send_msg",
+                {
+                    "message_type": scene,
+                    "user_id": int(sender_id) if sender_id.isdigit() else sender_id,
+                    "group_id": int(peer_id) if scene == "group" and peer_id.isdigit() else None,
+                    "message": [{"type": "text", "data": {"text": reply}}],
+                },
+            )
 
 
 def _segments_to_text(segments: Any) -> str:
@@ -155,17 +230,35 @@ def _segments_to_text(segments: Any) -> str:
 def _mentions_self(segments: Any, self_id: str) -> bool:
     if not isinstance(segments, list):
         return False
-    return any(seg.get("type") == "at" and str((seg.get("data") or {}).get("qq")) == self_id for seg in segments)
+    return any(
+        seg.get("type") == "at" and str((seg.get("data") or {}).get("qq")) == self_id
+        for seg in segments
+    )
 
 
-def store_message(db: Database, stream_id: str, instance_id: str, message_id: Any, direction: str,
-                  sender_id: str, sender_name: str, segments: list, text: str, is_bot: bool,
-                  raw: dict | None) -> dict[str, Any]:
+def store_message(
+    db: Database,
+    stream_id: str,
+    instance_id: str,
+    message_id: Any,
+    direction: str,
+    sender_id: str,
+    sender_name: str,
+    segments: list,
+    text: str,
+    is_bot: bool,
+    raw: dict | None,
+) -> dict[str, Any]:
     row = {
-        "id": new_id("msg"), "stream_id": stream_id, "instance_id": instance_id,
+        "id": new_id("msg"),
+        "stream_id": stream_id,
+        "instance_id": instance_id,
         "message_id": str(message_id) if message_id is not None else None,
-        "direction": direction, "sender_id": sender_id, "sender_name": sender_name,
-        "segments_json": json.dumps(segments, ensure_ascii=False), "text": text,
+        "direction": direction,
+        "sender_id": sender_id,
+        "sender_name": sender_name,
+        "segments_json": json.dumps(segments, ensure_ascii=False),
+        "text": text,
         "is_bot": 1 if is_bot else 0,
         "raw_json": json.dumps(raw, ensure_ascii=False) if raw else None,
         "created_at": now_iso(),

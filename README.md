@@ -28,6 +28,29 @@ bash scripts/run.sh
 BELLOWS_PORT=7801 bash scripts/run.sh
 ```
 
+Docker 运行：
+
+```bash
+cp .env.example .env        # 按需设置 BELLOWS_TOKEN
+docker compose up -d --build
+```
+
+## 文档
+
+| 文档 | 内容 |
+| --- | --- |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 进程模型、模块职责、数据流、数据库 |
+| [docs/API.md](docs/API.md) | REST/WS 接口、状态码、示例 |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 开发环境、运行方式、测试与排查 |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | 源码 / Docker / systemd 部署与备份 |
+| [docs/ONEBOT.md](docs/ONEBOT.md) | NapCat / SnowLuma 反向 WS 接入 |
+| [docs/FAQ.md](docs/FAQ.md) | 常见问题与已知限制 |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | 版本路线图 |
+| [docs/README_EN.md](docs/README_EN.md) | English overview |
+| [CHANGELOG.md](CHANGELOG.md) | 版本变更 |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献流程与检查命令 |
+| [SECURITY.md](SECURITY.md) | 漏洞报告与部署安全建议 |
+
 ## 已实现 / 可用（v0.0.1 BETA）
 
 | 能力 | 状态 |
@@ -86,10 +109,11 @@ cd apps/core && python3 -m bellows_core --data-dir ../../data --port 7801
 cd apps/web && npm run dev
 ```
 
-类型检查与构建：
+类型检查、构建与测试：
 
 ```bash
-cd apps/web && npm run type-check && npm run build
+bash scripts/check.sh
+# 等价于：ruff check / ruff format --check / pytest / vue-tsc / vite build
 ```
 
 ## 主要 API
@@ -124,13 +148,24 @@ bellows/
 │  │  └─ dist/             # 构建产物（由 run.sh 生成）
 │  └─ core/                # Python FastAPI 内核
 │     └─ bellows_core/     # db / onebot / demo / events / api / app
-├─ scripts/run.sh          # 单命令启动
-├─ data/                   # 运行时 SQLite（首次启动自动创建）
+├─ docs/                   # 架构 / API / 开发 / 部署 / OneBot / FAQ / 路线图
+├─ scripts/
+│  ├─ run.sh               # 单命令启动
+│  └─ check.sh             # lint + 测试 + 类型检查 + 构建
+├─ tests/                  # pytest（隔离临时数据目录）
+├─ .github/                # Issue/PR 模板、CI、Docker 工作流、dependabot
+├─ data/                   # 运行时 SQLite（首次启动自动创建，已 gitignore）
+├─ Dockerfile / docker-compose.yml
+├─ Makefile / .env.example
 ├─ README.md
 └─ LICENSE                 # AGPL-3.0
 ```
 
 完整规划见仓库外的 `/workspace/PLAN.md`。
+
+## 参与贡献
+
+提交前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 与 [AGENTS.md](AGENTS.md)，并执行 `bash scripts/check.sh`。缺陷与功能建议走 Issue 模板；安全问题请按 [SECURITY.md](SECURITY.md) 私下报告，不要公开开 Issue。
 
 ## 许可证
 

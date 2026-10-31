@@ -1,0 +1,71 @@
+name: 缺陷报告
+description: 报告可复现的问题（请先确认版本为 0.0.1-beta）
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。请先查 [docs/FAQ.md](https://github.com/Kei7295/Bellows/blob/main/docs/FAQ.md) 与 README 的「明确未完成 / 未验证」清单，避免把已知边界当成缺陷。
+        安全漏洞请不要用此模板，见 [SECURITY.md](https://github.com/Kei7295/Bellows/blob/main/SECURITY.md)。
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 实际发生了什么？期望是什么？
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 执行 bash scripts/run.sh
+        2. 打开 http://127.0.0.1:7801
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本 / 提交
+      description: 总览页版本号或 `git rev-parse --short HEAD`
+      placeholder: "0.0.1-beta / 610b08d"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 环境
+      description: 操作系统、Python、Node.js、浏览器版本
+      placeholder: "Ubuntu 24.04 / Python 3.12.6 / Node 24.1 / Chrome 141"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: 影响范围
+      options:
+        - 前端界面
+        - REST API / 事件流
+        - OneBot v11 接入
+        - 数据库 / 数据丢失
+        - 启动脚本 / 部署
+        - 其他
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志与截图
+      description: 控制台输出、日志页内容或相关 API 响应；请先去掉 Token 与聊天中的隐私内容。
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 已搜索现有 Issue，未发现重复
+          required: true
+        - label: 已移除 Token、密钥与真实聊天记录
+          required: true

@@ -1,0 +1,36 @@
+name: Docker image
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build image (no push)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: bellows:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke test container
+        run: |
+          docker run -d --name bellows-ci -p 7801:7801 bellows:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:7801/api/health; then break; fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:7801/api/health | grep -q '"status":"ok"'
+          docker logs bellows-ci --tail 20
+          docker rm -f bellows-ci

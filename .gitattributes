@@ -1,0 +1,18 @@
+* text=auto eol=lf
+
+*.py text diff=python
+*.vue text
+*.ts text
+*.json text
+*.yml text
+*.yaml text
+*.sh text eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+
+apps/web/package-lock.json linguist-generated=true

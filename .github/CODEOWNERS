@@ -1,0 +1,8 @@
+# 默认由仓库所有者审查
+* @Kei7295
+
+# 内核与协议接入
+/apps/core/ @Kei7295
+/docs/ @Kei7295
+/.github/ @Kei7295
+/SECURITY.md @Kei7295

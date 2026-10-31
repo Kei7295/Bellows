@@ -62,11 +62,19 @@ async def personas(request: Request):
 async def create_persona(request: Request, payload: PersonaIn):
     rt = rt_of(request)
     pid = new_id("per")
-    rt.db.insert("personas", {
-        "id": pid, "name": payload.name, "description": payload.description,
-        "prompt": payload.prompt, "style_json": json.dumps(payload.style, ensure_ascii=False),
-        "scope": payload.scope, "enabled": 1 if payload.enabled else 0, "updated_at": now_iso(),
-    })
+    rt.db.insert(
+        "personas",
+        {
+            "id": pid,
+            "name": payload.name,
+            "description": payload.description,
+            "prompt": payload.prompt,
+            "style_json": json.dumps(payload.style, ensure_ascii=False),
+            "scope": payload.scope,
+            "enabled": 1 if payload.enabled else 0,
+            "updated_at": now_iso(),
+        },
+    )
     entry = rt.db.log("info", "persona", f"创建人格 {payload.name}", {"persona": pid})
     rt.bus.publish("log.appended", entry)
     return {"id": pid, "ok": True}
@@ -118,12 +126,22 @@ async def providers(request: Request):
 async def create_provider(request: Request, payload: ProviderIn):
     rt = rt_of(request)
     pid = new_id("prv")
-    rt.db.insert("providers", {
-        "id": pid, "name": payload.name, "type": payload.type, "base_url": payload.base_url,
-        "model": payload.model, "params_json": json.dumps(payload.params, ensure_ascii=False),
-        "secret_ref": "", "enabled": 1 if payload.enabled else 0, "last_test": None,
-        "latency_ms": None, "updated_at": now_iso(),
-    })
+    rt.db.insert(
+        "providers",
+        {
+            "id": pid,
+            "name": payload.name,
+            "type": payload.type,
+            "base_url": payload.base_url,
+            "model": payload.model,
+            "params_json": json.dumps(payload.params, ensure_ascii=False),
+            "secret_ref": "",
+            "enabled": 1 if payload.enabled else 0,
+            "last_test": None,
+            "latency_ms": None,
+            "updated_at": now_iso(),
+        },
+    )
     entry = rt.db.log("info", "provider", f"创建 Provider {payload.name}", {"provider": pid})
     rt.bus.publish("log.appended", entry)
     return {"id": pid, "ok": True}
@@ -164,12 +182,23 @@ async def test_provider(request: Request, provider_id: str):
     # BETA: simulated connectivity probe, no external request is made.
     await asyncio.sleep(0.5)
     latency = random.randint(180, 900)
-    rt.db.execute("UPDATE providers SET last_test=?, latency_ms=?, updated_at=? WHERE id=?",
-                  (now_iso(), latency, now_iso(), provider_id))
-    entry = rt.db.log("info", "provider", f"Provider {inst['name']} 连通性测试通过（模拟），{latency}ms",
-                      {"provider": provider_id})
+    rt.db.execute(
+        "UPDATE providers SET last_test=?, latency_ms=?, updated_at=? WHERE id=?",
+        (now_iso(), latency, now_iso(), provider_id),
+    )
+    entry = rt.db.log(
+        "info",
+        "provider",
+        f"Provider {inst['name']} 连通性测试通过（模拟），{latency}ms",
+        {"provider": provider_id},
+    )
     rt.bus.publish("log.appended", entry)
-    return {"ok": True, "latency_ms": latency, "mode": "simulated", "message": "BETA 使用模拟探测，未发起真实请求"}
+    return {
+        "ok": True,
+        "latency_ms": latency,
+        "mode": "simulated",
+        "message": "BETA 使用模拟探测，未发起真实请求",
+    }
 
 
 @router.get("/memories")
@@ -213,7 +242,9 @@ async def toggle_plugin(request: Request, plugin_id: str, payload: PluginToggle)
     rt = rt_of(request)
     status = "active" if payload.enabled else "inactive"
     rt.db.execute("UPDATE plugins SET status=? WHERE id=?", (status, plugin_id))
-    entry = rt.db.log("info", "plugin", f"插件 {plugin_id} 状态切换为 {status}", {"plugin": plugin_id})
+    entry = rt.db.log(
+        "info", "plugin", f"插件 {plugin_id} 状态切换为 {status}", {"plugin": plugin_id}
+    )
     rt.bus.publish("log.appended", entry)
     return {"ok": True, "status": status}
 
@@ -221,8 +252,12 @@ async def toggle_plugin(request: Request, plugin_id: str, payload: PluginToggle)
 @router.post("/plugins/{plugin_id}/reload")
 async def reload_plugin(request: Request, plugin_id: str):
     rt = rt_of(request)
-    entry = rt.db.log("warn", "plugin", "插件运行时在 v0.0.1 BETA 尚未实现，无法热重载",
-                      {"plugin": plugin_id})
+    entry = rt.db.log(
+        "warn",
+        "plugin",
+        "插件运行时在 v0.0.1 BETA 尚未实现，无法热重载",
+        {"plugin": plugin_id},
+    )
     rt.bus.publish("log.appended", entry)
     return {"ok": False, "message": "BETA 暂不支持热重载，插件运行时将在后续版本接入"}
 
@@ -233,20 +268,43 @@ async def plugin_market():
         "status": "readonly-preview",
         "updated_at": now_iso(),
         "items": [
-            {"id": "bellows.example.echo", "name": "Echo 示例", "version": "0.1.0", "author": "Bellows",
-             "description": "最小插件模板：注册一个命令并回显文本。", "permissions": ["send.text", "config.read"]},
-            {"id": "bellows.example.weather", "name": "天气查询", "version": "0.1.0", "author": "Bellows",
-             "description": "示例：通过白名单域名请求天气并格式化为文本。", "permissions": ["net.outbound"]},
-            {"id": "bellows.example.digest", "name": "群聊摘要", "version": "0.1.0", "author": "Bellows",
-             "description": "示例：按时间窗口汇总群消息。", "permissions": ["message.read", "send.text"]},
+            {
+                "id": "bellows.example.echo",
+                "name": "Echo 示例",
+                "version": "0.1.0",
+                "author": "Bellows",
+                "description": "最小插件模板：注册一个命令并回显文本。",
+                "permissions": ["send.text", "config.read"],
+            },
+            {
+                "id": "bellows.example.weather",
+                "name": "天气查询",
+                "version": "0.1.0",
+                "author": "Bellows",
+                "description": "示例：通过白名单域名请求天气并格式化为文本。",
+                "permissions": ["net.outbound"],
+            },
+            {
+                "id": "bellows.example.digest",
+                "name": "群聊摘要",
+                "version": "0.1.0",
+                "author": "Bellows",
+                "description": "示例：按时间窗口汇总群消息。",
+                "permissions": ["message.read", "send.text"],
+            },
         ],
         "note": "v0.0.1 BETA 的市场为只读预览，安装流程尚未开放。",
     }
 
 
 @router.get("/logs")
-async def logs(request: Request, level: str | None = None, source: str | None = None,
-               q: str | None = None, limit: int = 100):
+async def logs(
+    request: Request,
+    level: str | None = None,
+    source: str | None = None,
+    q: str | None = None,
+    limit: int = 100,
+):
     db = rt_of(request).db
     sql = "SELECT * FROM logs WHERE 1=1"
     params: list[Any] = []
@@ -274,16 +332,22 @@ async def logs(request: Request, level: str | None = None, source: str | None = 
 @router.get("/audit")
 async def audit(request: Request, limit: int = 60):
     db = rt_of(request).db
-    rows = db.query("SELECT * FROM logs WHERE source IN ('audit','instance','plugin','persona','memory') "
-                    "ORDER BY created_at DESC LIMIT ?", (max(1, min(limit, 200)),))
+    rows = db.query(
+        "SELECT * FROM logs WHERE source IN ('audit','instance','plugin','persona','memory') "
+        "ORDER BY created_at DESC LIMIT ?",
+        (max(1, min(limit, 200)),),
+    )
     return rows
 
 
 @router.get("/settings")
 async def get_settings(request: Request):
     db = rt_of(request).db
-    return {r["key"]: json.loads(r["value_json"]) for r in db.query("SELECT * FROM settings")
-            if not r["key"].startswith("account:")}
+    return {
+        r["key"]: json.loads(r["value_json"])
+        for r in db.query("SELECT * FROM settings")
+        if not r["key"].startswith("account:")
+    }
 
 
 @router.put("/settings")
@@ -291,7 +355,18 @@ async def put_settings(request: Request, payload: dict[str, Any]):
     rt = rt_of(request)
     for key, value in payload.items():
         rt.db.set_setting(key, value)
-    entry = rt.db.log("info", "settings", f"更新设置：{', '.join(payload.keys())}", {"keys": list(payload.keys())})
+    entry = rt.db.log(
+        "info",
+        "settings",
+        f"更新设置：{', '.join(payload.keys())}",
+        {"keys": list(payload.keys())},
+    )
     rt.bus.publish("log.appended", entry)
-    return {"ok": True, "settings": {r["key"]: json.loads(r["value_json"]) for r in rt.db.query("SELECT * FROM settings")
-                                     if not r["key"].startswith("account:")}}
+    return {
+        "ok": True,
+        "settings": {
+            r["key"]: json.loads(r["value_json"])
+            for r in rt.db.query("SELECT * FROM settings")
+            if not r["key"].startswith("account:")
+        },
+    }
