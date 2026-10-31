@@ -126,7 +126,14 @@ bellows/
 │     └─ bellows_core/     # db / onebot / demo / events / api / app
 ├─ scripts/run.sh          # 单命令启动
 ├─ data/                   # 运行时 SQLite（首次启动自动创建）
-└─ README.md
+├─ README.md
+└─ LICENSE                 # AGPL-3.0
 ```
 
 完整规划见仓库外的 `/workspace/PLAN.md`。
+
+## 许可证
+
+Copyright (C) 2026 Kei7295
+
+本仓库以 [GNU Affero General Public License v3.0](LICENSE)（AGPL-3.0）发布。修改并通过网络提供服务时，须按 AGPL 第 13 条向用户提供对应源码。
