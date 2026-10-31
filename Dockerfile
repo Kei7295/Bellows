@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- Stage 1: build the Vue SPA ----
-FROM node:24-alpine AS web
+FROM node:25-alpine AS web
 WORKDIR /build
 COPY apps/web/package.json apps/web/package-lock.json ./
 RUN npm ci --no-audit --no-fund
