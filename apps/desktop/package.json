@@ -1,0 +1,15 @@
+{
+  "name": "@bellows/desktop",
+  "private": true,
+  "version": "0.0.1-beta",
+  "description": "Bellows Windows desktop shell (Tauri 2 + PyInstaller sidecar)",
+  "license": "AGPL-3.0-only",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.9.0"
+  }
+}

@@ -1,0 +1,23 @@
+[package]
+name = "bellows-desktop"
+version = "0.0.1-beta"
+description = "Bellows desktop shell"
+author = "Kei7295"
+license = "AGPL-3.0-or-later"
+edition = "2021"
+rust-version = "1.77"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+url = "2"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

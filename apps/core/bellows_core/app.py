@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -306,7 +307,10 @@ def create_app(data_dir: Path, token: str = "") -> tuple[FastAPI, Runtime]:
         }
 
     # Serve the built SPA when present (production / beta distribution).
-    dist = Path(__file__).resolve().parents[2] / "web" / "dist"
+    # A desktop sidecar ships the bundle inside the executable and points here
+    # through BELLOWS_WEB_DIST.
+    dist_env = os.environ.get("BELLOWS_WEB_DIST")
+    dist = Path(dist_env) if dist_env else Path(__file__).resolve().parents[2] / "web" / "dist"
     if dist.exists():
         app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")
 

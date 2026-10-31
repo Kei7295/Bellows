@@ -24,6 +24,13 @@ htmlcov/
 .env
 .env.local
 
+# Desktop (Tauri)
+apps/desktop/node_modules/
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/binaries/
+packaging/build/
+packaging/dist/
+
 # OS / editor
 .DS_Store
 .idea/
