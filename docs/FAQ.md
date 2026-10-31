@@ -8,9 +8,11 @@
 
 v0.0.1 BETA **没有接入真实 LLM**。`reply.py` 是规则引擎，Provider 的「测试」也是模拟探测。真实推理在后续版本。
 
-## 为什么没有桌面安装包？
+## 有桌面安装包吗？
 
-规划中的 Tauri 壳未包含在本次交付。当前是浏览器 SPA + Python 内核，一条命令启动。内核会打印握手行，供未来桌面壳解析端口。
+有 Windows 版。GitHub Actions 在 `windows-latest` 上把 Web 前端与 Python 内核打进单文件 sidecar，再由 Tauri 2 封装成 NSIS 安装包，可从 [Releases](https://github.com/Kei7295/Bellows/releases/latest) 或 Actions 的 `bellows-windows-nsis` 产物下载。
+
+安装包未做代码签名，SmartScreen 可能提示「未知发布者」。桌面版会自己启动内置内核，数据写入 `%APPDATA%\dev.bellows.desktop`，不需要本机安装 Python 或 Node。其他平台仍用 `bash scripts/run.sh` 或 Docker。
 
 ## 端口/数据放哪？
 

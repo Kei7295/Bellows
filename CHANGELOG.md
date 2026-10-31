@@ -20,10 +20,12 @@
 - 日志/审计检索、设置持久化。
 - SQLite 持久化与首次种子数据（3 实例、6 会话、30 消息、14 天统计等）。
 - AGPL-3.0 开源许可证。
+- 应用图标：Pillow 可复现生成 ICO/PNG，Web 端接入 favicon。
+- Windows 桌面版：Tauri 2 壳 + PyInstaller sidecar + NSIS 安装包，GitHub Actions 构建并归档。
 
 ### 已知限制
 
-- 未包含 Tauri 桌面壳与安装包，本次以浏览器 SPA + Python core 交付。
+- 桌面版仅 Windows；安装包未签名，SmartScreen 会提示「未知发布者」；暂无自动更新。
 - 未接入真实 LLM；Provider 测试为模拟探测，回复由规则引擎生成。
 - 插件运行时未实现，开关仅更新数据库与审计日志。
 - 仅支持反向 WS，正向 WS / HTTP 接入为 scaffold。

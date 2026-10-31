@@ -26,10 +26,14 @@ Requirements: Python ≥ 3.12, Node.js ≥ 22.18 or ≥ 24.12 (build only). Over
 - Plugin list/toggle, read-only marketplace preview
 - Logs/audit search, persisted settings
 - Seeded SQLite database on first start
+- Windows desktop build: Tauri 2 shell with a bundled PyInstaller sidecar, packaged as an NSIS installer in CI
+
+## Desktop (Windows)
+
+Download the `Bellows_0.0.1-beta_x64-setup.exe` from [Releases](https://github.com/Kei7295/Bellows/releases/latest) (or the `bellows-windows-nsis` Actions artifact) and install it. The installer is unsigned, so SmartScreen may warn about an unknown publisher. The shell starts the embedded core on a free localhost port and stores data under `%APPDATA%\dev.bellows.desktop`; Python and Node are not required. macOS/Linux desktop bundles are not provided yet.
 
 ## Explicitly not included
 
-- **No Tauri desktop shell** and no desktop installer in this release
 - **No real LLM calls** — provider "test" is simulated, replies come from a rule engine
 - **No plugin runtime** — toggles only update the database, `reload` is unimplemented
 - Reverse WS only; forward WS / HTTP are scaffolds

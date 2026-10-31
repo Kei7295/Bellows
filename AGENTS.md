@@ -5,7 +5,7 @@
 ## 项目事实
 
 - Bellows（风箱）v0.0.1 BETA：Vue 3 前端 + Python FastAPI 内核，单进程托管 SPA。
-- 目录：`apps/web`（Vue 3 + TS + Vite + Tailwind v4 + fuxsto-design），`apps/core/bellows_core`（db / onebot / demo / events / api / app），`scripts/`，`docs/`。
+- 目录：`apps/web`（Vue 3 + TS + Vite + Tailwind v4 + fuxsto-design），`apps/core/bellows_core`（db / onebot / demo / events / api / app），`apps/desktop`（Tauri 2 桌面壳），`packaging/`（PyInstaller sidecar），`scripts/`，`docs/`。
 - 运行：`bash scripts/run.sh`，默认 `http://127.0.0.1:7801`，数据写入 `data/`。
 - 唯一免鉴权 API 是 `/api/health`；设置 `--token` 后其余 `/api` 需 `Authorization: Bearer`。
 

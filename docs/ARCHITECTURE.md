@@ -72,12 +72,18 @@ Bellows v0.0.1 BETA 是一个**单进程、本机运行**的工作台：Python �
 - `views/*` 九个页面；`api.ts` 统一封装 REST 与事件流；`stores/app.ts` 保存主题与全局状态。
 - 构建产物 `apps/web/dist` 由内核 `/` 托管，未命中路径回退到 `index.html`。
 
-## 为什么不是桌面应用
+## 桌面壳（Windows）
 
-规划中的 Tauri 壳不在 v0.0.1 BETA 交付范围。当前进程模型已为桌面壳预留握手行：
+`apps/desktop` 是 Tauri 2 外壳，`apps/desktop/src-tauri/src/main.rs` 负责：
+
+1. 绑定 `127.0.0.1` 的空闲端口，启动 PyInstaller 打包的 `bellows-core` sidecar，并把数据目录指向 Tauri 的 `app_data_dir`；
+2. 轮询 `/api/health`，就绪后创建 WebView 窗口加载 `http://127.0.0.1:<port>`；
+3. 应用退出时杀掉 sidecar，避免残留 Python 进程。
+
+内核照常打印握手行，桌面壳也可以选择解析它而不是健康检查：
 
 ```text
 BELLOWS-CORE {"port": 7801, "token": "", "pid": 1234, "version": "0.0.1-beta", "data_dir": "..."}
 ```
 
-桌面壳可解析该行取得实际端口与 Token，而无需猜测。
+`packaging/build_sidecar.py` 用 PyInstaller `--onefile` 把内核与 `apps/web/dist` 打进单个可执行文件；内核通过 `BELLOWS_WEB_DIST` 找到包内的前端资源。当前只发布 Windows（NSIS），macOS / Linux 桌面包未验证。

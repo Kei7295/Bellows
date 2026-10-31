@@ -7,6 +7,7 @@
 [![python](https://img.shields.io/badge/python-3.12%2B-3776AB?style=flat-square)](https://www.python.org/)
 [![vue](https://img.shields.io/badge/vue-3-42b883?style=flat-square)](https://vuejs.org/)
 [![CI](https://github.com/Kei7295/Bellows/actions/workflows/ci.yml/badge.svg)](https://github.com/Kei7295/Bellows/actions/workflows/ci.yml)
+[![Windows Desktop](https://github.com/Kei7295/Bellows/actions/workflows/windows-desktop.yml/badge.svg)](https://github.com/Kei7295/Bellows/actions/workflows/windows-desktop.yml)
 
 > **协议进风，人格出火。**
 >
@@ -60,11 +61,22 @@ cp .env.example .env        # 至少改掉 BELLOWS_TOKEN
 docker compose up -d --build
 ```
 
+### Windows 桌面版
+
+不想装 Python/Node？直接下安装包：
+
+1. 打开 [Releases](https://github.com/Kei7295/Bellows/releases/latest)，下载 `Bellows_0.0.1-beta_x64-setup.exe`（或从 Actions 的 `bellows-windows-nsis` 产物获取）。
+2. 双击安装。安装包未签名，SmartScreen 可能提示「未知发布者」，选择「更多信息 → 仍要运行」。
+3. 启动后桌面壳会自己拉起内置内核，数据写到 `%APPDATA%\dev.bellows.desktop`，端口自动选择空闲值。
+
+内核与前端都打在同一个安装包里，不需要本机 Python、Node 或 NapCat；接真实 QQ 仍需在 NapCat / SnowLuma 配置反向 WS。
+
 ## 现在能烧什么（v0.0.1 BETA）
 
 | 能力 | 状态 |
 | --- | --- |
 | 桌面式 App Shell（自定义标题栏、可折叠侧栏、亮/暗/跟随系统） | 可用 |
+| Windows 桌面版（Tauri 2 + NSIS，内置 Python 内核） | 可用（CI 构建） |
 | 总览：在线实例、今日消息/回复/Token、14 天趋势、事件流、告警 | 可用 |
 | 实例 CRUD、连接/断开、能力探测、原始配置查看 | 可用 |
 | OneBot v11 反向 WS：`ws://127.0.0.1:7801/onebot/v11/ws/<实例ID>`，Bearer Token 校验 | 可用 |
@@ -81,7 +93,8 @@ BETA 的意思是：**能用，但别把炉子当成钢厂**。
 
 | 项 | 说明 |
 | --- | --- |
-| Tauri 桌面壳 | **未包含**。没有 `apps/desktop`、没有 Rust、没有安装包；当前是浏览器 SPA + Python core。 |
+| 桌面版覆盖范围 | 只发布 Windows（NSIS）；macOS / Linux 桌面包未验证，仍用脚本或 Docker。 |
+| 代码签名 / 自动更新 | 安装包未签名，SmartScreen 会提示；升级需手动下载新版本。 |
 | 真实 LLM 推理 | **未接入**。Provider 的「测试」返回 `mode: "simulated"`；回复由规则引擎生成。 |
 | 插件运行时 | **未实现**。开关只写数据库与审计日志，`reload` 返回未实现；市场只读。 |
 | 正向 WS / HTTP 接入 | 仅 scaffold；BETA 只有反向 WS。 |
@@ -191,8 +204,12 @@ bellows/
 │  ├─ web/                 # Vue 3 + TS + Vite + Tailwind v4 + fuxsto-design
 │  │  ├─ src/views/        # 总览 / 实例 / 控制台 / 人格 / 记忆 / 模型 / 插件 / 日志 / 设置
 │  │  └─ dist/             # 构建产物（由 run.sh 生成）
-│  └─ core/                # Python FastAPI 内核
-│     └─ bellows_core/     # db / onebot / demo / events / api / app
+│  ├─ core/                # Python FastAPI 内核
+│  │  └─ bellows_core/     # db / onebot / demo / events / api / app
+│  └─ desktop/             # Tauri 2 桌面壳（Windows NSIS）
+│     ├─ src-tauri/        # Rust 启动器 + 图标 + 打包配置
+│     └─ ui/               # 启动占位页
+├─ packaging/              # PyInstaller sidecar 入口与构建脚本
 ├─ assets/                 # README 概念图与吉祥物（AI 生成）
 ├─ docs/                   # 架构 / API / 开发 / 部署 / OneBot / FAQ / 路线图
 ├─ scripts/
