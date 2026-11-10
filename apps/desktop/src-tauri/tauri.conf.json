@@ -22,9 +22,7 @@
       "icons/128x128@2x.png",
       "icons/icon.ico"
     ],
-    "resources": {
-      "sidecar/": "sidecar/"
-    },
+    "resources": ["sidecar"],
     "shortDescription": "Local QQ chat bot workbench",
     "longDescription": "Bellows (风箱) is a local QQ chat bot workbench. The desktop shell starts the bundled Python core and opens the web UI."
   }
