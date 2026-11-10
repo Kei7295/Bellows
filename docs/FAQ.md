@@ -10,7 +10,9 @@ v0.0.1 BETA **没有接入真实 LLM**。`reply.py` 是规则引擎，Provider �
 
 ## 有桌面安装包吗？
 
-有 Windows 版。GitHub Actions 在 `windows-latest` 上把 Web 前端与 Python 内核打进单文件 sidecar，再由 Tauri 2 封装成 NSIS 安装包，可从 [Releases](https://github.com/Kei7295/Bellows/releases/latest) 或 Actions 的 `bellows-windows-nsis` 产物下载。
+有 Windows 版。GitHub Actions 在 `windows-latest` 上把 Web 前端与 Python 内核打成 onedir 目录，再由 Tauri 2 封装成 NSIS 安装包，可从 [Releases](https://github.com/Kei7295/Bellows/releases/latest) 或 Actions 的 `bellows-windows-nsis` 产物下载。
+
+启动时先出本地启动页（带进度条），内核就绪后再切到工作台，通常 1 秒左右；因为 sidecar 用 onedir 打包，不再有每次启动解压到临时目录的等待。
 
 安装包未做代码签名，SmartScreen 可能提示「未知发布者」。桌面版会自己启动内置内核，数据写入 `%APPDATA%\dev.bellows.desktop`，不需要本机安装 Python 或 Node。其他平台仍用 `bash scripts/run.sh` 或 Docker。
 

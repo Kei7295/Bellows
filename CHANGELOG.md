@@ -20,8 +20,9 @@
 - 日志/审计检索、设置持久化。
 - SQLite 持久化与首次种子数据（3 实例、6 会话、30 消息、14 天统计等）。
 - AGPL-3.0 开源许可证。
-- 应用图标：Pillow 可复现生成 ICO/PNG，Web 端接入 favicon。
+- 新应用图标：由 trae-design 生成主图，`scripts/generate_icons.py` 派生 ICO/PNG 与 Web favicon。
 - Windows 桌面版：Tauri 2 壳 + PyInstaller sidecar + NSIS 安装包，GitHub Actions 构建并归档。
+- 秒启动：窗口先出现并显示带进度条的启动页，内核改用 onedir 打包免去解压，健康检查改为 80ms 起步短轮询。
 
 ### 已知限制
 

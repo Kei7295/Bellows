@@ -77,6 +77,7 @@ docker compose up -d --build
 | --- | --- |
 | 桌面式 App Shell（自定义标题栏、可折叠侧栏、亮/暗/跟随系统） | 可用 |
 | Windows 桌面版（Tauri 2 + NSIS，内置 Python 内核） | 可用（CI 构建） |
+| 秒启动：先出带进度条的启动页，内核就绪后自动切工作台 | 可用 |
 | 总览：在线实例、今日消息/回复/Token、14 天趋势、事件流、告警 | 可用 |
 | 实例 CRUD、连接/断开、能力探测、原始配置查看 | 可用 |
 | OneBot v11 反向 WS：`ws://127.0.0.1:7801/onebot/v11/ws/<实例ID>`，Bearer Token 校验 | 可用 |

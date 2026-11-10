@@ -76,9 +76,11 @@ Bellows v0.0.1 BETA 是一个**单进程、本机运行**的工作台：Python �
 
 `apps/desktop` 是 Tauri 2 外壳，`apps/desktop/src-tauri/src/main.rs` 负责：
 
-1. 绑定 `127.0.0.1` 的空闲端口，启动 PyInstaller 打包的 `bellows-core` sidecar，并把数据目录指向 Tauri 的 `app_data_dir`；
-2. 轮询 `/api/health`，就绪后创建 WebView 窗口加载 `http://127.0.0.1:<port>`；
-3. 应用退出时杀掉 sidecar，避免残留 Python 进程。
+1. 先绑定 `127.0.0.1` 的空闲端口并**立即显示本地启动页**（`apps/desktop/ui/index.html`），用户不会对着空白桌面等；
+2. 启动 PyInstaller 打包的 `bellows-core`（`--onedir`，免去每次启动的解包开销），数据目录指向 Tauri 的 `app_data_dir`；
+3. 通过 `boot-progress` 事件把启动阶段推给启动页（进度条 + 文案）；
+4. 短间隔轮询 `/api/health`，就绪后把同一个窗口导航到 `http://127.0.0.1:<port>` 并放大到工作台尺寸；
+5. 应用退出时杀掉 sidecar，避免残留 Python 进程。
 
 内核照常打印握手行，桌面壳也可以选择解析它而不是健康检查：
 
@@ -86,4 +88,4 @@ Bellows v0.0.1 BETA 是一个**单进程、本机运行**的工作台：Python �
 BELLOWS-CORE {"port": 7801, "token": "", "pid": 1234, "version": "0.0.1-beta", "data_dir": "..."}
 ```
 
-`packaging/build_sidecar.py` 用 PyInstaller `--onefile` 把内核与 `apps/web/dist` 打进单个可执行文件；内核通过 `BELLOWS_WEB_DIST` 找到包内的前端资源。当前只发布 Windows（NSIS），macOS / Linux 桌面包未验证。
+`packaging/build_sidecar.py` 用 PyInstaller `--onedir` 把内核与 `apps/web/dist` 打进 `apps/desktop/src-tauri/sidecar/`，再由 Tauri 作为 resource 一起安装；内核通过 `BELLOWS_WEB_DIST` 找到包内的前端资源。当前只发布 Windows（NSIS），macOS / Linux 桌面包未验证。

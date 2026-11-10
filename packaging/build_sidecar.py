@@ -9,7 +9,6 @@ Rust target triple suffix so `tauri build` can pick it up.
 from __future__ import annotations
 
 import os
-import platform
 import shutil
 import subprocess
 import sys
@@ -17,20 +16,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "packaging" / "build" / "dist"
-
-
-def host_triple() -> str:
-    if sys.platform == "win32":
-        return "x86_64-pc-windows-msvc"
-    if sys.platform == "darwin":
-        machine = platform.machine().lower()
-        return "aarch64-apple-darwin" if machine in {"arm64", "aarch64"} else "x86_64-apple-darwin"
-    machine = platform.machine().lower()
-    return (
-        "aarch64-unknown-linux-gnu"
-        if machine in {"arm64", "aarch64"}
-        else "x86_64-unknown-linux-gnu"
-    )
 
 
 def exe_suffix() -> str:
@@ -50,7 +35,7 @@ def main() -> None:
         "PyInstaller",
         "--noconfirm",
         "--clean",
-        "--onefile",
+        "--onedir",
         "--name",
         "bellows-core",
         "--distpath",
@@ -71,12 +56,24 @@ def main() -> None:
     ]
     subprocess.run(args, check=True, cwd=ROOT)
 
-    built = DIST / f"bellows-core{exe_suffix()}"
-    target_dir = ROOT / "apps" / "desktop" / "src-tauri" / "binaries"
-    target_dir.mkdir(parents=True, exist_ok=True)
-    target = target_dir / f"bellows-core-{host_triple()}{exe_suffix()}"
-    shutil.copy2(built, target)
-    print(f"sidecar copied to {target}")
+    # onedir: no per-launch extraction, so the desktop app starts in ~1s instead
+    # of paying the onefile unpack cost on every boot.
+    built_dir = DIST / "bellows-core"
+    built_exe = built_dir / f"bellows-core{exe_suffix()}"
+    if not built_exe.exists():
+        raise SystemExit(f"sidecar build output missing: {built_exe}")
+
+    target_dir = ROOT / "apps" / "desktop" / "src-tauri" / "sidecar"
+    if target_dir.exists():
+        shutil.rmtree(target_dir)
+    shutil.copytree(built_dir, target_dir)
+
+    # Drop stale onefile artefacts from older builds.
+    legacy = ROOT / "apps" / "desktop" / "src-tauri" / "binaries"
+    if legacy.exists():
+        shutil.rmtree(legacy)
+
+    print(f"sidecar copied to {target_dir} ({built_exe.stat().st_size // 1024} KiB exe)")
 
 
 if __name__ == "__main__":

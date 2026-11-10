@@ -3,17 +3,5 @@
   "identifier": "default",
   "description": "Default capability for the Bellows main window",
   "windows": ["main"],
-  "permissions": [
-    "core:default",
-    {
-      "identifier": "shell:allow-execute",
-      "allow": [
-        {
-          "name": "binaries/bellows-core",
-          "sidecar": true,
-          "args": true
-        }
-      ]
-    }
-  ]
+  "permissions": ["core:default"]
 }

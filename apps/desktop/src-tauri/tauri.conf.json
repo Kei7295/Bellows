@@ -7,6 +7,7 @@
     "frontendDist": "../ui"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [],
     "security": {
       "csp": null
@@ -21,7 +22,9 @@
       "icons/128x128@2x.png",
       "icons/icon.ico"
     ],
-    "externalBin": ["binaries/bellows-core"],
+    "resources": {
+      "sidecar/": "sidecar/"
+    },
     "shortDescription": "Local QQ chat bot workbench",
     "longDescription": "Bellows (风箱) is a local QQ chat bot workbench. The desktop shell starts the bundled Python core and opens the web UI."
   }
