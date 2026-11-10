@@ -81,6 +81,7 @@ docker compose up -d --build
 | 总览：在线实例、今日消息/回复/Token、14 天趋势、事件流、告警 | 可用 |
 | 实例 CRUD、连接/断开、能力探测、原始配置查看 | 可用 |
 | OneBot v11 反向 WS：`ws://127.0.0.1:7801/onebot/v11/ws/<实例ID>`，Bearer Token 校验 | 可用 |
+| 正向 WS 外连 [ORBIT 星轨](https://github.com/Kei7295/XingGui-ORBIT)：探测账号、一键接入、断线重连与 HTTP 动作回退 | 可用 |
 | 消息归一化、落库、`/api/events` 实时推送、控制台人工发送 | 可用 |
 | 演示管线：每 11–18 秒生成入站消息与规则回复 | 可用 |
 | 会话列表、消息检索、人格 CRUD、Provider CRUD、记忆浏览/删除 | 可用 |
@@ -98,7 +99,7 @@ BETA 的意思是：**能用，但别把炉子当成钢厂**。
 | 代码签名 / 自动更新 | 安装包未签名，SmartScreen 会提示；升级需手动下载新版本。 |
 | 真实 LLM 推理 | **未接入**。Provider 的「测试」返回 `mode: "simulated"`；回复由规则引擎生成。 |
 | 插件运行时 | **未实现**。开关只写数据库与审计日志，`reload` 返回未实现；市场只读。 |
-| 正向 WS / HTTP 接入 | 仅 scaffold；BETA 只有反向 WS。 |
+| 独立 HTTP 接入模式 | 未提供；HTTP 仅作为正向 WS 断线时的动作回退。 |
 | 钥匙串 / 密钥存储 | 只存 `secret_ref` 标识，没有真实密钥读写。 |
 | 自动记忆抽取 / 向量检索 / MCP / 调度器 | 未实现。 |
 | 登录 / 扫码 | 永远由 NapCat / SnowLuma 完成，Bellows 不碰 QQ 登录协议。 |
@@ -109,13 +110,15 @@ BETA 的意思是：**能用，但别把炉子当成钢厂**。
 flowchart LR
   QQ([QQ 账号]) -->|登录 / 扫码| A[NapCat / SnowLuma]
   A -->|反向 WebSocket| C[Bellows 内核<br/>FastAPI]
+  C -.->|正向 WebSocket 外连| O[ORBIT 星轨]
   C -->|事件推送| U[浏览器工作台<br/>Vue 3]
   C -->|规则回复 send_msg| A
+  C -->|send_msg| O
   C --> D[(SQLite<br/>data/data.db)]
   D --> C
 ```
 
-内核是单进程：REST API、`/api/events` 事件流、OneBot 反向 WS、SPA 静态资源，全在同一扇门后。更细的模块拆解见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+内核是单进程：REST API、`/api/events` 事件流、OneBot 反向 WS、ORBIT 正向 WS 客户端、SPA 静态资源，全在同一扇门后。更细的模块拆解见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
 ## 接入真实协议端（反向 WS）
 
@@ -140,6 +143,15 @@ curl -s -X POST http://127.0.0.1:7801/api/debug/inbound \
 
 更多排查见 [docs/ONEBOT.md](docs/ONEBOT.md)。
 
+## 接入 ORBIT（星轨，正向 WS）
+
+[ORBIT](https://github.com/Kei7295/XingGui-ORBIT) 是自带 OneBot 11 接口的协议端。风箱像 MaiBot 一样作为客户端**主动外连**，不需要在 ORBIT 里填风箱地址：
+
+1. 启动 ORBIT（Node ≥ 20）：`npm install && npm run build && npm start`，默认监听 `http://127.0.0.1:8787`。
+2. 打开风箱「实例」页，点右上角「接入 ORBIT」，填地址与 `access_token`（ORBIT 默认 `orbit-demo-token`）。
+3. 先点「探测」确认账号、版本与延迟，再点「接入并连接」。风箱会创建/复用 `forward_ws` 实例并连接 `/onebot/ws`。
+4. 连接后 ORBIT 的 `message` 事件进入同一条消息管线；回复优先走 WS，断线时自动走 ORBIT 的 HTTP 动作接口，并指数退避重连。
+
 ## 开发 = 自己拉风箱
 
 ```bash
@@ -157,7 +169,7 @@ bash scripts/check.sh
 # 等价于：ruff check / ruff format --check / pytest / vue-tsc / vite build
 ```
 
-13 个 pytest 用例全部使用临时数据目录，不会弄脏你的 `data/`。
+16 个 pytest 用例全部使用临时数据目录，不会弄脏你的 `data/`。
 
 ## API 速查
 
@@ -167,8 +179,10 @@ bash scripts/check.sh
 | GET | `/api/overview` | 总览聚合 |
 | GET/POST | `/api/instances` | 实例列表 / 创建 |
 | PATCH/DELETE | `/api/instances/{id}` | 更新 / 删除 |
-| POST | `/api/instances/{id}/connect`、`/disconnect` | 连接 / 断开 |
+| POST | `/api/instances/{id}/connect`、`/disconnect` | 连接 / 断开（含正向 WS 外连） |
 | GET | `/api/instances/{id}/capabilities` | 能力探测 |
+| POST | `/api/orbit/probe` | 探测 ORBIT：账号、版本、延迟与端点 |
+| POST | `/api/orbit/connect` | 探测并一键接入 ORBIT（创建/复用实例） |
 | GET | `/api/streams`、`/api/streams/{id}/messages` | 会话与消息 |
 | POST | `/api/streams/{id}/send` | 人工发送（可带演示回复） |
 | WS | `/api/events` | 实时事件流 |

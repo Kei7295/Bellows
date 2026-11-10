@@ -69,6 +69,8 @@ export const api = {
   connectInstance: (id: string) => request(`/api/instances/${id}/connect`, { method: 'POST' }),
   disconnectInstance: (id: string) => request(`/api/instances/${id}/disconnect`, { method: 'POST' }),
   capabilities: (id: string) => request(`/api/instances/${id}/capabilities`),
+  orbitProbe: (body: Record<string, unknown>) => request('/api/orbit/probe', json(body)),
+  orbitConnect: (body: Record<string, unknown>) => request('/api/orbit/connect', json(body)),
   streams: (params = '') => request(`/api/streams${params}`),
   stream: (id: string) => request(`/api/streams/${id}`),
   messages: (id: string, limit = 80) => request(`/api/streams/${id}/messages?limit=${limit}`),

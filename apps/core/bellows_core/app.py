@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from . import BUILD, __version__
 from .api_content import router as content_router
 from .api_instances import router as instances_router
+from .api_orbit import router as orbit_router
 from .db import Database, now_iso
 from .demo import DemoEngine
 from .events import EventBus
@@ -91,6 +92,15 @@ def _overview(rt: Runtime) -> dict[str, Any]:
                     "instance_id": inst["id"],
                 }
             )
+        elif inst["status"] == "offline" and inst["mode"] == "forward_ws":
+            alerts.append(
+                {
+                    "level": "warning",
+                    "title": f"{inst['name']} 未连接 ORBIT",
+                    "detail": "确认 ORBIT 已在运行，然后点击连接或使用「接入 ORBIT」重新探测。",
+                    "instance_id": inst["id"],
+                }
+            )
     return {
         "version": __version__,
         "build": BUILD,
@@ -127,12 +137,14 @@ def create_app(data_dir: Path, token: str = "") -> tuple[FastAPI, Runtime]:
             "WHERE mode != 'demo' AND status IN ('online','connecting','degraded')"
         )
         demo.start()
+        await manager.resume_forward()
         db.log("info", "core", f"Bellows core {__version__} 启动，数据目录 {data_dir}")
         bus.publish(
             "log.appended",
             {"level": "info", "source": "core", "message": "Bellows core 已就绪"},
         )
         yield
+        await manager.shutdown()
         await demo.stop()
         db.execute(
             "UPDATE instances SET status='offline', latency_ms=NULL "
@@ -295,6 +307,7 @@ def create_app(data_dir: Path, token: str = "") -> tuple[FastAPI, Runtime]:
 
     app.include_router(instances_router)
     app.include_router(content_router)
+    app.include_router(orbit_router)
 
     @app.get("/api/meta")
     async def meta():

@@ -50,6 +50,8 @@ def main() -> None:
         add_data,
         "--collect-submodules",
         "uvicorn",
+        "--collect-submodules",
+        "websockets",
         "--hidden-import",
         "bellows_core",
         str(ROOT / "packaging" / "sidecar_entry.py"),

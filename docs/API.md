@@ -28,9 +28,11 @@ Base URL：`http://127.0.0.1:7801`。BETA 期间路径与字段可能调整。
 | POST | `/api/instances` | 创建；字段 `name`（必填）、`mode`、`endpoint`、`access_token`、`self_id`、`platform`、`protocol` |
 | PATCH | `/api/instances/{id}` | 局部更新；不存在返回 404 |
 | DELETE | `/api/instances/{id}` | 同时删除该实例的会话与消息 |
-| POST | `/api/instances/{id}/connect` | `demo` 置在线；`reverse_ws` 置 connecting；其他模式返回 error |
-| POST | `/api/instances/{id}/disconnect` | 断开 WS 并置 offline |
+| POST | `/api/instances/{id}/connect` | `demo` 置在线；`reverse_ws` 置 connecting；`forward_ws` 启动 ORBIT 外连并返回 `connecting` |
+| POST | `/api/instances/{id}/disconnect` | 断开反向 WS / 停止 ORBIT 外连并置 offline |
 | GET | `/api/instances/{id}/capabilities` | 返回能力探测结果（发送/撤回/群列表等） |
+
+`forward_ws` 实例字段约定：`endpoint` 为 ORBIT 正向 WS 地址（如 `ws://127.0.0.1:8787/onebot/ws`），`access_token` 为 ORBIT 的 Access Token，`config.protocol = "ORBIT"`。内核启动时会自动重连 `config.auto_reconnect` 未显式为 false 的实例。
 
 ## 会话与消息
 
@@ -53,6 +55,36 @@ ws://127.0.0.1:7801/onebot/v11/ws/{instance_id}
 - 实例不存在 → 关闭码 1008。
 - 实例配置了 `access_token` 时，需带 `Authorization: Bearer <token>`，否则 1008。
 - 接收 OneBot v11 事件 JSON（需含 `post_type`）；服务端可主动下发 `send_msg` 动作。
+
+## ORBIT（星轨）正向 WS
+
+风箱作为 OneBot 客户端主动外连 ORBIT，方向与 MaiBot 相同。ORBIT 默认监听 `http://127.0.0.1:8787`，默认 Access Token 为 `orbit-demo-token`。
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| POST | `/api/orbit/probe` | 探测 ORBIT；body `{base_url, access_token}` |
+| POST | `/api/orbit/connect` | 探测并创建/复用 `forward_ws` 实例，成功后自动连接；body `{base_url, access_token, name?, instance_id?, auto_connect?}` |
+
+探测成功返回：
+
+```json
+{
+  "ok": true,
+  "base_url": "http://127.0.0.1:8787",
+  "http_url": "http://127.0.0.1:8787/onebot",
+  "ws_url": "ws://127.0.0.1:8787/onebot/ws",
+  "latency_ms": 3,
+  "account": { "uin": "10001", "nickname": "星轨" },
+  "status": { "online": true },
+  "version": { "app_name": "ORBIT", "app_version": "0.0.1-beta" }
+}
+```
+
+- `base_url` 接受 `127.0.0.1:8787`、`http://host:port`、`ws://host/onebot/ws`，内核会归一化并保留路径前缀。
+- 探测使用 OneBot `get_login_info` / `get_status` / `get_version_info`；连接失败或 Token 错误返回 502。
+- `connect` 成功后返回 `{ok, instance, probe, connection}`；同 `base_url` 会复用既有正向实例，不重复创建。
+- 实例 `endpoint` 只保存 WS 地址，Token 单独存于 `access_token`，连接时再拼接查询参数。
+- 外连断开后按 1s → 30s 指数退避重连；WS 不可用时动作自动回退到 ORBIT 的 HTTP 接口。
 
 ## 人格
 

@@ -3,10 +3,11 @@
     <PageHeader
       eyebrow="CONNECTIONS / 实例"
       title="实例与协议端"
-      description="每个实例对应一个 QQ 账号与一个协议端连接。BETA 内置演示管线，并开放 OneBot v11 反向 WS 的真实接入路径。"
+      description="每个实例对应一个 QQ 账号与一个协议端连接。支持反向 WS（NapCat / SnowLuma 连入）与正向 WS（风箱主动外连 ORBIT 星轨）。"
     >
       <template #actions>
         <Button variant="outline" size="sm" :icon="RefreshCw" @click="reload">刷新</Button>
+        <Button variant="outline" size="sm" :icon="Orbit" @click="openOrbit">接入 ORBIT</Button>
         <Button variant="primary" size="sm" :icon="Plus" @click="openCreate">新建实例</Button>
       </template>
     </PageHeader>
@@ -95,7 +96,7 @@
     <Alert
       type="info"
       title="如何让真实账号上线"
-      description="在 NapCat 或 SnowLuma 中启用反向 WebSocket，指向 ws://127.0.0.1:6199/onebot/v11/ws/<实例 ID>；本机演示无需协议端。"
+      description="反向 WS：在 NapCat / SnowLuma 中指向 ws://127.0.0.1:6199/onebot/v11/ws/<实例 ID>。正向 WS：启动 ORBIT 后点右上角「接入 ORBIT」，风箱会主动外连。"
     />
 
     <Drawer
@@ -126,7 +127,7 @@
         </div>
         <div v-if="form.mode !== 'demo'">
           <label class="eyebrow mb-2 block">连接地址</label>
-          <Input v-model="form.endpoint" placeholder="ws://127.0.0.1:6199/onebot/v11/ws/..." />
+          <Input v-model="form.endpoint" :placeholder="endpointPlaceholder" />
         </div>
         <div v-if="form.mode !== 'demo'">
           <label class="eyebrow mb-2 block">Access Token（可选）</label>
@@ -138,10 +139,16 @@
           title="演示管线"
           description="不连接真实 QQ。内核每 11–18 秒生成一条消息，用于验证控制台、事件流与落库。"
         />
-        <div v-else class="rounded-[var(--radius)] border border-border bg-secondary p-3">
+        <div v-else-if="form.mode === 'reverse_ws'" class="rounded-[var(--radius)] border border-border bg-secondary p-3">
           <p class="eyebrow mb-2">PROTOCOL ENDPOINT</p>
           <p class="mono break-all text-[11px] text-muted-foreground">
             ws://127.0.0.1:6199/onebot/v11/ws/{{ editing?.id || '<实例 ID>' }}
+          </p>
+        </div>
+        <div v-else class="rounded-[var(--radius)] border border-border bg-secondary p-3">
+          <p class="eyebrow mb-2">ORBIT FORWARD WS</p>
+          <p class="mono break-all text-[11px] text-muted-foreground">
+            由风箱主动连接 {{ form.endpoint || 'ws://127.0.0.1:8787/onebot/ws' }}
           </p>
         </div>
       </div>
@@ -208,6 +215,67 @@
         <CodeBlock label="CONFIG / 原始配置" :content="JSON.stringify(selected.config, null, 2)" />
       </div>
     </Drawer>
+
+    <Drawer
+      v-model:open="orbitOpen"
+      title="接入星轨 ORBIT"
+      description="风箱作为 OneBot 客户端主动外连 ORBIT 的正向 WebSocket，类似 MaiBot 的连接方式。"
+      size="md"
+      :show-confirm="false"
+      cancel-text="关闭"
+    >
+      <div class="space-y-5">
+        <div>
+          <label class="eyebrow mb-2 block">ORBIT 地址</label>
+          <Input v-model="orbit.base_url" placeholder="http://127.0.0.1:8787" />
+          <p class="mt-1.5 text-[11px] text-muted-foreground">
+            默认端口 8787；填 http:// 或 ws://.../onebot/ws 均可，风箱会自动归一化。
+          </p>
+        </div>
+        <div>
+          <label class="eyebrow mb-2 block">Access Token</label>
+          <Input v-model="orbit.access_token" type="password" placeholder="orbit-demo-token" />
+          <p class="mt-1.5 text-[11px] text-muted-foreground">
+            对应 ORBIT 的 ORBIT_ACCESS_TOKEN，默认 orbit-demo-token。
+          </p>
+        </div>
+
+        <div v-if="orbitProbe" class="space-y-3 rounded-[var(--radius)] border border-border bg-secondary p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex min-w-0 items-center gap-2">
+              <StatusDot status="online" :size="10" />
+              <span class="truncate text-[13px] font-semibold">{{ orbitAccountLabel }}</span>
+            </div>
+            <Chip size="sm" variant="secondary">{{ orbitProbe.latency_ms }} ms</Chip>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <p class="eyebrow">SELF ID</p>
+              <p class="mono mt-1 text-[12px]">{{ orbitProbe.account.uin || '未上报' }}</p>
+            </div>
+            <div>
+              <p class="eyebrow">ORBIT 版本</p>
+              <p class="mono mt-1 text-[12px]">{{ orbitVersionLabel }}</p>
+            </div>
+          </div>
+          <div>
+            <p class="eyebrow">FORWARD WS</p>
+            <p class="mono mt-1 break-all text-[11px] text-muted-foreground">{{ orbitProbe.ws_url }}</p>
+          </div>
+        </div>
+
+        <Alert
+          type="info"
+          title="如何启动 ORBIT"
+          description="在 ORBIT 仓库执行 npm install && npm run build && npm start，默认监听 127.0.0.1:8787；接入后风箱会自动重连并订阅消息事件。"
+        />
+      </div>
+      <template #footer>
+        <Button variant="secondary" @click="orbitOpen = false">取消</Button>
+        <Button variant="outline" :loading="orbitProbing" @click="probeOrbit">探测</Button>
+        <Button variant="primary" :loading="orbitSaving" @click="connectOrbit">接入并连接</Button>
+      </template>
+    </Drawer>
   </div>
 </template>
 
@@ -216,7 +284,7 @@ import { computed, onMounted, ref } from 'vue'
 import { Alert, Button, Card, Chip, Drawer, Input, Segmented, Select, Table, Tooltip } from 'fuxsto-design'
 import { Dialog } from 'fuxsto-design/dialog'
 import {
-  CheckCircle2, CircleAlert, PanelRightOpen, Pencil, Play, Plus, RefreshCw, Search, Server, Square,
+  CheckCircle2, CircleAlert, Orbit, PanelRightOpen, Pencil, Play, Plus, RefreshCw, Search, Server, Square,
   Trash2, Wifi, WifiOff, XCircle,
 } from 'lucide-vue-next'
 import PageHeader from '../components/PageHeader.vue'
@@ -224,7 +292,7 @@ import StatusDot from '../components/StatusDot.vue'
 import CodeBlock from '../components/CodeBlock.vue'
 import { useAppStore } from '../stores/app'
 import { api } from '../api'
-import type { Instance } from '../types'
+import type { Instance, OrbitConnectResult, OrbitProbe } from '../types'
 import { formatDateTime, modeLabel, relativeTime, statusMeta as statusMap } from '../utils'
 
 const store = useAppStore()
@@ -236,8 +304,30 @@ const editing = ref<Instance | null>(null)
 const selected = ref<Instance | null>(null)
 const capabilities = ref<{ probed_at: string; capabilities: Record<string, boolean>; protocol?: string } | null>(null)
 const saving = ref(false)
+const orbitOpen = ref(false)
+const orbitProbing = ref(false)
+const orbitSaving = ref(false)
+const orbitProbe = ref<OrbitProbe | null>(null)
+const orbit = ref({ base_url: 'http://127.0.0.1:8787', access_token: 'orbit-demo-token' })
+
+const orbitAccountLabel = computed(() => {
+  const account = orbitProbe.value?.account
+  if (!account) return 'ORBIT'
+  return account.nickname ? `${account.nickname} · ${account.uin || '未知 UIN'}` : account.uin || 'ORBIT 账号'
+})
+
+const orbitVersionLabel = computed(() => {
+  const version = orbitProbe.value?.version || {}
+  return String(version.app_version || version.app_name || '未知')
+})
 
 const form = ref({ name: '', mode: 'reverse_ws', protocol: 'NapCat', self_id: '', endpoint: '', access_token: '' })
+
+const endpointPlaceholder = computed(() =>
+  form.value.mode === 'forward_ws'
+    ? 'ws://127.0.0.1:8787/onebot/ws（ORBIT 地址）'
+    : 'ws://127.0.0.1:6199/onebot/v11/ws/...',
+)
 
 const filtered = computed(() => {
   let list = store.instances
@@ -265,14 +355,14 @@ const columns = [
 ]
 
 const modeOptions = [
-  { label: '反向 WS（推荐）', value: 'reverse_ws' },
+  { label: '反向 WS（协议端连入）', value: 'reverse_ws' },
+  { label: '正向 WS（风箱外连 ORBIT）', value: 'forward_ws' },
   { label: '演示管线', value: 'demo' },
-  { label: '正向 WS（规划）', value: 'forward_ws', disabled: true },
-  { label: 'HTTP（规划）', value: 'http', disabled: true },
 ]
 const protocolOptions = [
   { label: 'NapCat', value: 'NapCat' },
   { label: 'SnowLuma', value: 'SnowLuma' },
+  { label: 'ORBIT / 星轨', value: 'ORBIT' },
   { label: '其他 / 演示', value: '演示' },
 ]
 const filterOptions = [
@@ -290,6 +380,52 @@ function openCreate(): void {
   editing.value = null
   Object.assign(form.value, { name: '', mode: 'reverse_ws', protocol: 'NapCat', self_id: '', endpoint: '', access_token: '' })
   drawerOpen.value = true
+}
+
+function openOrbit(): void {
+  orbitProbe.value = null
+  orbitOpen.value = true
+}
+
+async function probeOrbit(): Promise<void> {
+  orbitProbing.value = true
+  try {
+    orbitProbe.value = (await api.orbitProbe({
+      base_url: orbit.value.base_url.trim(),
+      access_token: orbit.value.access_token,
+    })) as OrbitProbe
+    store.toast('ORBIT 探测成功', 'success', orbitAccountLabel.value)
+  } catch (e) {
+    orbitProbe.value = null
+    store.toast('探测失败', 'error', e instanceof Error ? e.message : String(e))
+  } finally {
+    orbitProbing.value = false
+  }
+}
+
+async function connectOrbit(): Promise<void> {
+  if (!orbit.value.base_url.trim()) {
+    store.toast('请填写 ORBIT 地址', 'warning')
+    return
+  }
+  orbitSaving.value = true
+  try {
+    const out = (await api.orbitConnect({
+      base_url: orbit.value.base_url.trim(),
+      access_token: orbit.value.access_token,
+      name: '',
+    })) as OrbitConnectResult
+    orbitProbe.value = out.probe
+    orbitOpen.value = false
+    store.toast('ORBIT 已接入，正在建立连接', 'success', orbitAccountLabel.value)
+    await store.loadCore()
+    const latest = store.instances.find((item) => item.id === out.instance.id) || out.instance
+    await openDetail(latest)
+  } catch (e) {
+    store.toast('接入失败', 'error', e instanceof Error ? e.message : String(e))
+  } finally {
+    orbitSaving.value = false
+  }
 }
 
 function openEdit(row: Instance): void {

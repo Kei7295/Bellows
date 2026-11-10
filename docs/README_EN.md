@@ -2,7 +2,7 @@
 
 > Protocol in, persona out.
 
-Bellows is a local QQ chat bot workbench. **v0.0.1 BETA** ships a Vue 3 SPA served by a single Python FastAPI process, with a working OneBot v11 reverse WebSocket endpoint. Everything else is explicitly scoped below.
+Bellows is a local QQ chat bot workbench. **v0.0.1 BETA** ships a Vue 3 SPA served by a single Python FastAPI process, with OneBot v11 reverse WebSocket support and an outbound forward WebSocket client for [ORBIT](https://github.com/Kei7295/XingGui-ORBIT). Everything else is explicitly scoped below.
 
 ## Quick start
 
@@ -20,6 +20,7 @@ Requirements: Python ≥ 3.12, Node.js ≥ 22.18 or ≥ 24.12 (build only). Over
 - Overview: online instances, today's messages/replies/tokens, 14-day trend, event feed, alerts
 - Instance CRUD, connect/disconnect, capability probe, raw config view
 - OneBot v11 reverse WS at `ws://127.0.0.1:7801/onebot/v11/ws/<instance_id>` with optional Bearer token
+- ORBIT forward WS client: probe, one-click setup, auto-reconnect and HTTP action fallback
 - Message normalization, persistence, `/api/events` push, manual send from console
 - Demo pipeline: inbound messages and rule replies every 11–18 seconds, no real QQ needed
 - Streams, message history, persona CRUD, provider CRUD, memory browsing
@@ -36,7 +37,7 @@ Download the `Bellows_0.0.1-beta_x64-setup.exe` from [Releases](https://github.c
 
 - **No real LLM calls** — provider "test" is simulated, replies come from a rule engine
 - **No plugin runtime** — toggles only update the database, `reload` is unimplemented
-- Reverse WS only; forward WS / HTTP are scaffolds
+- No standalone HTTP-only mode; HTTP is only used as an action fallback when the ORBIT forward WS is down
 - No keychain, automatic memory extraction, vector search, MCP or scheduler
 - QQ login/QR is handled by NapCat / SnowLuma, never by Bellows
 
@@ -46,6 +47,12 @@ Download the `Bellows_0.0.1-beta_x64-setup.exe` from [Releases](https://github.c
 2. Use `ws://127.0.0.1:7801/onebot/v11/ws/<instance_id>`; seeded instance `ins_second` uses token `beta-token`.
 3. Once connected, the instance becomes online and a log entry appears.
 4. Group @-mentions, messages containing "风箱", and private messages trigger rule replies sent back over the same WS as `send_msg`.
+
+## Connect ORBIT
+
+1. Start ORBIT (`npm install && npm run build && npm start`), listening on `http://127.0.0.1:8787`.
+2. In Bellows, open **Instances → 接入 ORBIT**, enter the address and Access Token (`orbit-demo-token` by default), then probe and connect.
+3. Bellows creates a `forward_ws` instance and connects to ORBIT's `/onebot/ws`; messages flow through the same pipeline as reverse WS.
 
 Debug without an adapter:
 

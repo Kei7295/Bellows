@@ -125,6 +125,7 @@ async def update_instance(request: Request, instance_id: str, payload: InstanceP
 async def delete_instance(request: Request, instance_id: str):
     rt = rt_of(request)
     db = rt.db
+    await request.app.state.onebot.disconnect(instance_id)
     db.execute("DELETE FROM messages WHERE instance_id=?", (instance_id,))
     db.execute("DELETE FROM streams WHERE instance_id=?", (instance_id,))
     db.execute("DELETE FROM instances WHERE id=?", (instance_id,))
@@ -140,6 +141,8 @@ async def connect_instance(request: Request, instance_id: str):
     inst = db.one("SELECT * FROM instances WHERE id=?", (instance_id,))
     if not inst:
         return JSONResponse({"code": "not_found", "message": "Instance not found"}, status_code=404)
+    if inst["mode"] == "forward_ws":
+        return await request.app.state.onebot.start_forward(instance_id)
     if inst["mode"] == "demo":
         db.execute(
             "UPDATE instances SET status='online', latency_ms=24, updated_at=? WHERE id=?",
@@ -162,7 +165,7 @@ async def connect_instance(request: Request, instance_id: str):
             (now_iso(), instance_id),
         )
         status = "error"
-        msg = "正向 WS / HTTP 模式在 v0.0.1 BETA 尚未启用"
+        msg = "不支持的连接模式，请使用反向 WS、正向 WS（ORBIT）或演示管线"
         level = "warn"
     rt.bus.publish("instance.status", {"id": instance_id, "status": status})
     entry = db.log(level, "instance", msg, {"instance": instance_id})

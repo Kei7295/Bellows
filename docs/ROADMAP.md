@@ -4,8 +4,8 @@
 
 ## v0.0.1 BETA（当前）
 
-已完成：本机工作台、实例管理、OneBot v11 反向 WS、消息控制台、人格/Provider/记忆管理、演示管线、日志审计、SQLite 持久化、Windows 桌面壳与 NSIS 安装包。
-未完成：真实 LLM、插件运行时、正向 WS/HTTP、钥匙串、向量记忆、MCP、调度器、macOS/Linux 桌面包。
+已完成：本机工作台、实例管理、OneBot v11 反向 WS、ORBIT 正向 WS 外连、消息控制台、人格/Provider/记忆管理、演示管线、日志审计、SQLite 持久化、Windows 桌面壳与 NSIS 安装包。
+未完成：真实 LLM、插件运行时、独立 HTTP 接入模式、钥匙串、向量记忆、MCP、调度器、macOS/Linux 桌面包。
 
 ## v0.0.2 — 稳定化
 
@@ -24,7 +24,7 @@
 
 - 插件运行时（加载、权限、沙箱边界）
 - 插件市场安装/更新
-- 正向 WS / HTTP 接入
+- 独立 HTTP 接入模式（正向 WS 已可用）
 
 ## v0.3.0 — 跨平台桌面与记忆
 

@@ -2,6 +2,26 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### 新增
+
+- 集成 [ORBIT（星轨）](https://github.com/Kei7295/XingGui-ORBIT)：风箱作为 OneBot 客户端主动外连 ORBIT 正向 WS（与 MaiBot 同方向），无需在 ORBIT 中填写风箱地址。
+- 实例页新增「接入 ORBIT」向导：地址/Token 探测、账号与版本展示、一键创建或复用实例并连接。
+- 正向 WS 客户端：生命周期与心跳订阅、`self_id` 自动更新、消息进入统一归一化管线、1s→30s 指数退避重连、WS 不可用时 HTTP 动作回退。
+- 新增 `POST /api/orbit/probe` 与 `POST /api/orbit/connect`。
+- 新增 ORBIT 探测与正向客户端 pytest 用例（含本地假 ORBIT HTTP/WS 服务）。
+
+### 变更
+
+- `forward_ws` 实例从 scaffold 变为可用模式；内核启动时会自动重连开启 `auto_reconnect` 的正向实例。
+- 兼容 ORBIT 以字符串形式下发 `message` 事件。
+
+### 已知限制
+
+- 独立 HTTP 接入模式仍未提供，HTTP 仅用于正向 WS 断线时的动作回退。
+- 仍需自行启动 ORBIT；风箱不会内置 Node 或打包 ORBIT。
+
 ## [0.0.1-beta] - 2026-10-31
 
 首个公开测试版本，仅覆盖「本机工作台 + OneBot v11 反向 WS + 演示管线」。

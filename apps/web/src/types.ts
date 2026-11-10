@@ -14,6 +14,24 @@ export interface Instance {
   account?: { uin?: string } | null
 }
 
+export interface OrbitProbe {
+  ok: boolean
+  base_url: string
+  http_url: string
+  ws_url: string
+  latency_ms: number
+  account: { uin: string; nickname: string }
+  status: Record<string, unknown>
+  version: Record<string, unknown>
+}
+
+export interface OrbitConnectResult {
+  ok: boolean
+  instance: Instance
+  probe: OrbitProbe
+  connection: { ok: boolean; status: string; message: string } | null
+}
+
 export interface Stream {
   id: string
   instance_id: string
